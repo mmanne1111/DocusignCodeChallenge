@@ -1,0 +1,119 @@
+﻿@using System.Configuration;
+@model  Docusign.Models.CommandListViewModel
+
+@{
+
+	string url = ConfigurationManager.AppSettings["baseurl"];
+	string submitURL = url + "GetCommandResponse";
+}
+<div></div>
+<div>
+	<br /><br />
+	<table class="table table-bordered table-responsive table-hover">
+		<tr>
+			<td colspan="2">
+				<table class="table table-bordered table-responsive table-hover">
+
+					<tr>
+						<th>Command</th>
+						<th>Description</th>
+						<th>Hot Response</th>
+						<th>Cold Response</th>
+
+					</tr>
+					@foreach (var item in Model.CommandList)
+					{
+						<tr>
+							<td>@item.CommandID</td>
+							<td>@item.Description</td>
+							<td>@item.HotResponse </td>
+							<td>@item.ColdResponse</td>
+						</tr>
+					}
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td style="width:50px">
+				<b>Select Temperature:</b>
+				@Html.DropDownList("TemperatueId", new SelectList(Model.TemperatureList, "TemperatueId", "TemperatueType"), new { @id = "ddltemp", style = "width:60px" })
+
+
+			</td>
+			<td style="width:50px">
+				<b>Provide Commands list as Comma Separated:</b>
+
+				<input type="text" style="height:30px; width:130px" id="txtcmdlist" value="" onkeypress="return onlyNumbers();">
+			</td>
+
+
+
+		</tr>
+		<tr>
+			<td colspan="2">
+				<b>
+					Result:<font color="green">
+						<label id="lblres"></label>
+					</font>
+				</b>
+			</td>
+		</tr>
+
+
+		<tr>
+			<td colspan="2" align="center">
+				<input type="button" class="btn btn-primary active" value="submit" onclick="submitdata();" />
+
+			</td>
+		</tr>
+	</table>
+
+</div>
+<script>
+		function onlyNumbers(evt) {
+
+			evt = (evt) ? evt : window.event;
+			var charCode = (evt.which) ? evt.which : evt.keyCode;
+			if (charCode > 31 && (charCode < 48 || charCode > 57) && charCode==188) {
+				return false;
+			}
+			return true;
+		}
+
+	function submitdata() {
+		const paragraph = $('#txtcmdlist').val();
+		const regex = /[1-8](?:,[1-8])*$/;
+		var Matched = paragraph.match(regex);
+		var data = {
+			"TemperatureID": $('#ddltemp').val().toString(),
+			"Commands": $('#txtcmdlist').val().toString()
+		};
+		if (Matched != null) {
+
+			$.ajax({
+				type: "Post",
+				url: "@submitURL",
+				
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				data: JSON.stringify(data),
+				success: function (data) {
+					var obj = JSON.parse(JSON.stringify(data));
+
+					$('#lblres').html(obj.Response);
+				},
+				failure: function (data) {
+					alert('Please Retry');
+				},
+				error: function (data) {
+					alert('Please Retry');
+				}
+			});
+		}
+		else {
+			$('#lblres').html('fail');
+		}
+		}
+
+
+</script>
